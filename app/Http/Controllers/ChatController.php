@@ -47,9 +47,12 @@ class ChatController extends Controller
 
         Messages::create($data);
 
-        $data['user_name']= Auth::user()->name;
-
-        event(new Message($data));
+        event(new Message(
+                        $data['message'],
+                        $data['receiver_id'],
+                        $data['sender_id'],
+                        Auth::user()->name
+                    ));
 
         return response()->json();
     }
@@ -65,10 +68,10 @@ class ChatController extends Controller
                 $q->selection();
             }])
             ->where(function ($q) use ($receiver_id) {
-                $q->Where('receiver_id', Auth::id())->where('sender_id', $receiver_id);
+                $q->auth_receiver()->where('sender_id', $receiver_id);
             })
             ->orWhere(function ($q) use ($receiver_id) {
-                $q->Where('receiver_id', $receiver_id)->where('sender_id', Auth::id());
+                $q->Where('receiver_id', $receiver_id)->auth_sender();
             })
             ->latest()->limit(3)->get();
 
@@ -103,11 +106,11 @@ class ChatController extends Controller
                 $q->selection();
             }])
             ->where(function ($q) use ($receiver_id, $request) {
-                $q->Where('receiver_id', Auth::id())->where('sender_id', $receiver_id)
+                $q->auth_receiver()->where('sender_id', $receiver_id)
                     ->where('id', '<', $request->first_msg_id);
             })
             ->orWhere(function ($q) use ($receiver_id, $request) {
-                $q->Where('receiver_id', $receiver_id)->where('sender_id', Auth::id())
+                $q->Where('receiver_id', $receiver_id)->auth_sender()
                     ->where('id', '<', $request->first_msg_id);
             })
             ->latest()->limit(3)->get();
