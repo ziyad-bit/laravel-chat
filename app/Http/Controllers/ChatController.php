@@ -40,19 +40,14 @@ class ChatController extends Controller
     public function store(Request $request)
     {
         $data=[
-            'message' => $request->msg,
-            'sender_id' => Auth::id(),
+            'message'     => $request->msg,
+            'sender_id'   => Auth::id(),
             'receiver_id' => $request->receiver_id,
         ];
 
         Messages::create($data);
 
-        event(new Message(
-                        $data['message'],
-                        $data['receiver_id'],
-                        $data['sender_id'],
-                        Auth::user()->name
-                    ));
+        event(new Message($data,Auth::user()->name));
 
         return response()->json();
     }
